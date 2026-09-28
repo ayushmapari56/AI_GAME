@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Maze Hunter — Supervised + Unsupervised + A* Pathfinding</title>
+  <meta name="description" content="An interactive AI game demonstrating Supervised Learning, K-Means Clustering, and A* Graph Search in real-time.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Cyber Background Glows -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="game-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AI MAZE HUNTER</h1>
+          <span class="badge-tag">TRI-ALGORITHM AI ENGINE</span>
+        </div>
+      </div>
+
+      <!-- Level Switcher Tabs -->
+      <nav class="level-tabs" id="levelTabs">
+        <button class="tab-btn active" data-level="1" id="tabLvl1">
+          <span class="lvl-num">01</span>
+          <span class="lvl-name">A* Maze</span>
+        </button>
+        <button class="tab-btn" data-level="2" id="tabLvl2">
+          <span class="lvl-num">02</span>
+          <span class="lvl-name">K-Means World</span>
+        </button>
+        <button class="tab-btn" data-level="3" id="tabLvl3">
+          <span class="lvl-num">03</span>
+          <span class="lvl-name">Learning Hunter</span>
+        </button>
+      </nav>
+
+      <!-- Quick Action Controls -->
+      <div class="header-actions">
+        <button class="btn btn-glass" id="btnAudioToggle" title="Toggle Sound">
+          <span id="audioIcon">🔊</span>
+        </button>
+        <button class="btn btn-glass" id="btnDocModal" title="Deep ML Architecture">
+          <span>🧠 ML Guide</span>
+        </button>
+        <button class="btn btn-primary" id="btnRestart">
+          <span>↺ New Maze</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="game-layout">
+      
+      <!-- Left: Game Canvas Area -->
+      <section class="canvas-section">
+        <!-- Live Status Bar -->
+        <div class="canvas-status-bar">
+          <div class="status-item">
+            <span class="label">SCORE</span>
+            <span class="val text-cyan" id="scoreVal">0</span>
+          </div>
+          <div class="status-divider"></div>
+          <div class="status-item">
+            <span class="label">ENERGY ORBS</span>
+            <span class="val text-yellow" id="orbsVal">0 / 0</span>
+          </div>
+          <div class="status-divider"></div>
+          <div class="status-item">
+            <span class="label">EMP CHARGES</span>
+            <span class="val text-purple" id="empVal">1</span>
+          </div>
+          <div class="status-divider"></div>
+          <div class="status-item">
+            <span class="label">AI MODE</span>
+            <span class="val text-green" id="aiModeLabel">Direct A* Pursuit</span>
+          </div>
+        </div>
+
+        <!-- Canvas Container with Interactive Overlays -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="gameCanvas" width="850" height="646"></canvas>
+          
+          <!-- Tactical Action Floating Buttons -->
+          <div class="action-float-bar">
+            <button class="action-pill" id="btnDecoy">
+              <span class="key-hint">SPACE</span>
+              <span>🌀 Decoy Hologram</span>
+            </button>
+            <button class="action-pill" id="btnEmp">
+              <span class="key-hint">E</span>
+              <span>⚡ EMP Shockwave</span>
+            </button>
+          </div>
+
+          <!-- Banner Notification Modal (Game Over / Level Clear) -->
+          <div class="banner-overlay hidden" id="bannerOverlay">
+            <div class="banner-card" id="bannerCard">
+              <div class="banner-badge" id="bannerBadge">LEVEL 1 COMPLETE</div>
+              <h2 id="bannerTitle">MAZE CLEARED!</h2>
+              <p id="bannerDesc">The AI failed to catch you before you gathered all energy nodes.</p>
+              <div class="banner-stats" id="bannerStats">
+                <!-- Injected via JS -->
+              </div>
+              <button class="btn btn-primary btn-large" id="bannerActionBtn">
+                <span>Continue to Level 2 →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Controls Legend Bar -->
+        <div class="controls-bar">
+          <div class="ctrl-group">
+            <span class="ctrl-tag">W A S D</span> / <span class="ctrl-tag">↑ ← ↓ →</span> Move
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-tag">SPACE</span> Hologram Decoy
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-tag">E</span> EMP Stun
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-tag">V</span> Explored Nodes
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-tag">H</span> K-Means Heatmap
+          </div>
+          <div class="ctrl-group">
+            <span class="ctrl-tag">P</span> Intercept Reticle
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Real-time AI Telemetry Dashboard -->
+      <aside class="telemetry-sidebar">
+        
+        <!-- Pillar 1: A* Graph Search Telemetry -->
+        <div class="card panel-astar">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="pillar-number">01</span>
+              <h3>A* GRAPH SEARCH</h3>
+            </div>
+            <span class="status-pill status-active" id="astarStatusPill">OPTIMAL PATH</span>
+          </div>
+
+          <div class="card-body">
+            <div class="metric-grid">
+              <div class="metric-box">
+                <span class="metric-label">Nodes Visited</span>
+                <span class="metric-val text-cyan" id="mNodesVisited">0</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Compute Time</span>
+                <span class="metric-val text-cyan" id="mComputeTime">0.00 ms</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Path Length</span>
+                <span class="metric-val text-cyan" id="mPathSteps">0 steps</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Path Cost g(n)</span>
+                <span class="metric-val text-cyan" id="mPathCost">0.0</span>
+              </div>
+            </div>
+
+            <!-- Exploration Toggle -->
+            <div class="toggle-row">
+              <span>Visualize Explored Open/Closed Set</span>
+              <label class="switch">
+                <input type="checkbox" id="toggleExplored" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar 2: Unsupervised K-Means Zone Clustering -->
+        <div class="card panel-kmeans" id="panelKMeans">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="pillar-number">02</span>
+              <h3>UNSUPERVISED (K-MEANS)</h3>
+            </div>
+            <span class="status-pill" id="kmeansStatusPill">LEVEL 2+</span>
+          </div>
+
+          <div class="card-body">
+            <!-- Multi-Color Zone Breakdown Bar -->
+            <div class="zone-bar-wrapper">
+              <div class="zone-labels-header">
+                <span>Map Territory Segmentation</span>
+                <span id="inertiaVal" class="text-muted">Inertia: 0.0</span>
+              </div>
+              <div class="multi-progress-bar">
+                <div class="prog-seg prog-green" id="segSafe" style="width: 70%;"></div>
+                <div class="prog-seg prog-yellow" id="segTransit" style="width: 20%;"></div>
+                <div class="prog-seg prog-red" id="segHotspot" style="width: 10%;"></div>
+              </div>
+              <div class="zone-legend">
+                <div class="legend-item"><span class="dot dot-green"></span> Safe <b id="pctSafe">70%</b></div>
+                <div class="legend-item"><span class="dot dot-yellow"></span> Transit <b id="pctTransit">20%</b></div>
+                <div class="legend-item"><span class="dot dot-red"></span> Hotspot <b id="pctHotspot">10%</b></div>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <span>Overlay Zone Heatmap</span>
+              <label class="switch">
+                <input type="checkbox" id="toggleHeatmap" checked>
+                <span class="slider slider-green"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar 3: Supervised Learning Player Predictor -->
+        <div class="card panel-supervised" id="panelSupervised">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="pillar-number">03</span>
+              <h3>SUPERVISED PREDICTOR</h3>
+            </div>
+            <span class="status-pill" id="supStatusPill">LEVEL 3</span>
+          </div>
+
+          <div class="card-body">
+            <!-- Interception Prediction Box -->
+            <div class="prediction-target-box">
+              <div class="pred-lead">
+                <span class="pred-label">FORECASTED NEXT MOVE</span>
+                <div class="pred-direction" id="predDirText">UP [^]</div>
+              </div>
+              <div class="pred-confidence">
+                <span class="conf-num" id="predConfText">85%</span>
+                <span class="conf-sub">CONFIDENCE</span>
+              </div>
+            </div>
+
+            <!-- Direction Probability Distribution Bars -->
+            <div class="prob-distribution">
+              <div class="prob-item">
+                <span class="prob-name">UP ↑</span>
+                <div class="prob-bar-track"><div class="prob-bar-fill" id="pBarUp" style="width: 75%;"></div></div>
+                <span class="prob-pct" id="pPctUp">75%</span>
+              </div>
+              <div class="prob-item">
+                <span class="prob-name">DOWN ↓</span>
+                <div class="prob-bar-track"><div class="prob-bar-fill" id="pBarDown" style="width: 5%;"></div></div>
+                <span class="prob-pct" id="pPctDown">5%</span>
+              </div>
+              <div class="prob-item">
+                <span class="prob-name">LEFT ←</span>
+                <div class="prob-bar-track"><div class="prob-bar-fill" id="pBarLeft" style="width: 10%;"></div></div>
+                <span class="prob-pct" id="pPctLeft">10%</span>
+              </div>
+              <div class="prob-item">
+                <span class="prob-name">RIGHT →</span>
+                <div class="prob-bar-track"><div class="prob-bar-fill" id="pBarRight" style="width: 10%;"></div></div>
+                <span class="prob-pct" id="pPctRight">10%</span>
+              </div>
+            </div>
+
+            <!-- Telemetry Footer -->
+            <div class="sup-meta-row">
+              <span>Training Samples: <b id="supSamples">0</b></span>
+              <span>Online Accuracy: <b id="supAcc">100%</b></span>
+            </div>
+
+            <div class="toggle-row">
+              <span>Interception Reticle Ghost</span>
+              <label class="switch">
+                <input type="checkbox" id="toggleGhost" checked>
+                <span class="slider slider-purple"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+  </div>
+
+  <!-- Deep Machine Learning Interactive Modal -->
+  <div class="modal-backdrop hidden" id="mlModalBackdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon">🧠</div>
+          <div>
+            <h2>AI Architecture & Mathematical Foundations</h2>
+            <p>How Supervised, Unsupervised & Graph Search algorithms solve the hunter-prey pursuit problem.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="btnCloseModal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="algo-cards-row">
+          
+          <!-- Modal Card 1 -->
+          <div class="algo-card border-cyan">
+            <div class="algo-card-badge text-cyan">PILLAR 1</div>
+            <h3>A* Pathfinding Algorithm</h3>
+            <p class="algo-formula">f(n) = g(n) + h(n)</p>
+            <ul class="algo-list">
+              <li><b>g(n):</b> Exact path cost from hunter's current coordinate to cell <i>n</i>.</li>
+              <li><b>h(n):</b> Admissible Manhattan distance heuristic $h(n) = |x_1 - x_2| + |y_1 - y_2|$.</li>
+              <li><b>Priority Queue:</b> Evaluates minimum $f(n)$ candidate nodes dynamically.</li>
+              <li><b>Zone Edge Modulation:</b> Adjusts step cost $w(u, v)$ based on unsupervised cluster properties.</li>
+            </ul>
+          </div>
+
+          <!-- Modal Card 2 -->
+          <div class="algo-card border-green">
+            <div class="algo-card-badge text-green">PILLAR 2</div>
+            <h3>K-Means Zone Clustering</h3>
+            <p class="algo-formula">J = \sum_{k=1}^K \sum_{x \in S_k} ||x - \mu_k||^2</p>
+            <ul class="algo-list">
+              <li><b>Feature Vectors:</b> [Visit Frequency, Dwell Duration, Enemy Proximity, Open Passages, Coordinates].</li>
+              <li><b>Cluster 0 (Green):</b> Safe Zone with low player footprint and minimal enemy patrols.</li>
+              <li><b>Cluster 1 (Yellow):</b> High-transit connecting corridors and junctions.</li>
+              <li><b>Cluster 2 (Red):</b> Dangerous Hotspots and frequent encounter choke-points.</li>
+            </ul>
+          </div>
+
+          <!-- Modal Card 3 -->
+          <div class="algo-card border-purple">
+            <div class="algo-card-badge text-purple">PILLAR 3</div>
+            <h3>Supervised Predictor</h3>
+            <p class="algo-formula">P(Y_{t+1} \mid X_t) \rightarrow \text{Lookahead } (x', y')</p>
+            <ul class="algo-list">
+              <li><b>Online Ensemble:</b> Continuous feature extraction from player movement lag windows.</li>
+              <li><b>Sensory Inputs:</b> 4-directional wall radar, enemy relative vector, previous $k$ steps.</li>
+              <li><b>Lookahead Interception:</b> Projects $N$ steps along predicted heading and feeds the interception coordinate $(x', y')$ directly to A*!</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="workflow-flowchart">
+          <h4>🔄 Real-Time Algorithmic Interplay Flow</h4>
+          <div class="flow-steps">
+            <div class="step-pill">1. Player Moves</div>
+            <span class="flow-arrow">➔</span>
+            <div class="step-pill">2. Telemetry Updates</div>
+            <span class="flow-arrow">➔</span>
+            <div class="step-pill">3. K-Means Re-Clusters Map</div>
+            <span class="flow-arrow">➔</span>
+            <div class="step-pill">4. Classifier Predicts Target</div>
+            <span class="flow-arrow">➔</span>
+            <div class="step-pill">5. A* Computes Intercept Route</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnResumeGame">Resume Simulation</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
